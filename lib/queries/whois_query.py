@@ -3,7 +3,7 @@
 
 import pyes
 
-import IPy
+#import IPy
 import re
 import datetime
 import time
@@ -42,9 +42,13 @@ class WhoisQuery():
                 query = qq[1]
                 q = pyes.query.TextQuery(field, query)
                 queries.append(q)
-        bq = pyes.query.BoolQuery(must=queries)
-        rez = self.es.search(query=bq, indices=self.index, doc_types=self.es_type)
-        to_return = "Total %s matches\r\n%s" % (rez.count(), self.list_to_str(rez._results['hits']['hits']))
+        to_return = ""
+        try:         
+            bq = pyes.query.BoolQuery(must=queries)
+            rez = self.es.search(query=bq, indices=self.index, doc_types=self.es_type)
+            to_return = "Total %s matches\r\n%s" % (rez.count(), self.list_to_str(rez._results['hits']['hits']))
+        except Exception, e:
+            to_return = str(e)
 
 
         return to_return
