@@ -8,6 +8,7 @@ import re
 import datetime
 import time
 import json
+import time
 import string
 
 class WhoisQuery():
@@ -17,7 +18,15 @@ class WhoisQuery():
         self.es = pyes.ES(es)
         self.index = es_index
         self.es_type = es_type
-
+    def checkindex(self):
+        if len(self.es.status(indices=[self.index])["indices"]) == 0:
+            try:
+                self.es.open_index(self.index)
+                time.sleep(20)
+            except Exception, e:
+                pass
+    
+                    
     def validate(self, s):
         return filter(lambda x: x in string.ascii_letters +string.digits+'-'+':'+'.'+'*'+ '+' + '[' + ']' + '|' + '@' + '_', s)
 
