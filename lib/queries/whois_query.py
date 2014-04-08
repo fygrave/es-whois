@@ -10,6 +10,7 @@ import time
 import json
 import time
 import string
+import dateutil
 
 class WhoisQuery():
 
@@ -70,7 +71,16 @@ class WhoisQuery():
 			from_d = query[1:query.find('|')]
 			to_d = query[query.find('|') + 1:query.find(']')]
 			print from_d
-			print to_d
+                        print to_d
+                        try:
+                            dt_from_d = parser.parse(from_d)
+                            dt_to_d = parser.parse(to_d)
+                            from_d = dt_from_d.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                            to_d = dt_to_d.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                            print from_d
+                            print to_d
+                        except:
+                            pass
 			q = pyes.query.RangeQuery(qrange=pyes.query.ESRange(field, to_value=to_d,  from_value=from_d))
 		else:	
 			q = pyes.query.TextQuery(field, query)
