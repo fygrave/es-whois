@@ -10,7 +10,7 @@ import time
 import json
 import time
 import string
-import dateutil
+from dateutil import parser
 
 class WhoisQuery():
 
