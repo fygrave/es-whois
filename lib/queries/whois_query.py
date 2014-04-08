@@ -11,6 +11,8 @@ import json
 import time
 import string
 from dateutil import parser
+import pytz
+from pytz import timezone
 
 class WhoisQuery():
 
@@ -19,10 +21,11 @@ class WhoisQuery():
         self.es = pyes.ES(es)
         self.index = es_index
         self.es_type = es_type
-    def checkindex(self):
-        if len(self.es.status(indices=[self.index])["indices"]) == 0:
+    def checkindex(self, ind):
+	print "check %s" % ind
+        if len(self.es.status(indices=[ind])["indices"]) == 0:
             try:
-                self.es.open_index(self.index)
+                self.es.open_index(ind)
                 time.sleep(20)
             except Exception, e:
                 pass
@@ -71,22 +74,30 @@ class WhoisQuery():
 			from_d = query[1:query.find('|')]
 			to_d = query[query.find('|') + 1:query.find(']')]
 			print from_d
-                        print to_d
-                        try:
+			print to_d
+
+                        try:                                                                         
                             dt_from_d = parser.parse(from_d)
                             dt_to_d = parser.parse(to_d)
-                            from_d = dt_from_d.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-                            to_d = dt_to_d.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                            local_tz = timezone("Asia/Taipei")
+                            local_from_d = local_tz.localize(dt_from_d)
+                            local_to_d = local_tz.localize(dt_to_d)
+                            from_d = local_from_d.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                            to_d = local_to_d.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
                             print from_d
                             print to_d
-                        except:
+                        except Exception, e:
+                            print e
                             pass
+
 			q = pyes.query.RangeQuery(qrange=pyes.query.ESRange(field, to_value=to_d,  from_value=from_d))
 		else:	
 			q = pyes.query.TextQuery(field, query)
                 queries.append(q)
         to_return = ""
         try:         
+            self.checkindex("%s-%s"% (self.index, day))
+
             bq = pyes.query.BoolQuery(must=queries)
             rez = self.es.search(pyes.query.Search(query=bq, start=start_num, size=size_num), indices="%s-%s"% (self.index, day), doc_types=self.es_type)
             to_return = "Result, Total %s matches\r\n%s" % (rez.count(), self.list_to_str(rez._results['hits']['hits']))
