@@ -23,9 +23,12 @@ class WhoisQuery():
         self.es_type = es_type
     def checkindex(self, ind):
 	print "check %s" % ind
-        if len(self.es.status(indices=[ind])["indices"]) == 0:
+        
+        statuses = self.es.indices.status(indices=[ind])
+        if len(statuses['indices']) == 0:
+            print "index is closed"
             try:
-                self.es.open_index(ind)
+                self.es.indices.open_index(ind)
                 time.sleep(20)
             except Exception, e:
                 pass
