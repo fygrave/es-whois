@@ -32,18 +32,29 @@ class WhoisQuery():
     
                     
     def validate(self, s):
-        return filter(lambda x: x in string.ascii_letters +string.digits+'-'+':'+'.'+'*'+ '+' + '[' + ']' + '|' + '@' + '_', s)
+        return filter(lambda x: x in string.ascii_letters +string.digits+' '+'-'+':'+'.'+'*'+ '+' + '[' + ']' + '|' + '@' + '_', s)
 
     def list_to_str(self,l):
         if len(l) == 0:
             return ""
         return reduce(lambda x, y: "%s\r\n%s"%(x,y), map(self.printable_entry,  l))
 
+    def tm_local(self, d):
+        rez = d
+        try:
+            dt_d = parser.parse(d)
+            local_tz = timezone("Asia/Taipei")
+            rez = dt_d.astimezone(local_tz).strftime("%Y-%m-%dT%H:%M:%S.000 %z")
+        except Exception, e:
+            pass
+        return rez
+
+
     def printable_entry(self,  val):
        v = val['_source']
        
        
-       return "%s\r\n%s"%(reduce(lambda x,y: "%s, %s"% (x,y), v.keys()), reduce (lambda x, y: "%s, %s" % (x,y), v.values()))
+       return "%s\r\n%s"%(reduce(lambda x,y: "%s, %s"% (x,y), v.keys()), reduce (lambda x, y: "%s, %s" % (x, self.tm_local(y)), v.values()))
        #return "%s,"% (json.dumps(v))
 
     def whois_query(self, query):
@@ -73,9 +84,7 @@ class WhoisQuery():
 		elif query.find('[') != -1:
 			from_d = query[1:query.find('|')]
 			to_d = query[query.find('|') + 1:query.find(']')]
-			print from_d
-			print to_d
-
+	
                         try:                                                                         
                             dt_from_d = parser.parse(from_d)
                             dt_to_d = parser.parse(to_d)
@@ -84,8 +93,6 @@ class WhoisQuery():
                             local_to_d = local_tz.localize(dt_to_d)
                             from_d = local_from_d.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
                             to_d = local_to_d.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-                            print from_d
-                            print to_d
                         except Exception, e:
                             print e
                             pass
